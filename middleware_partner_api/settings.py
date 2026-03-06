@@ -72,7 +72,14 @@ INSTALLED_APPS = [
     'cyclone_track',
     'island',
     'project',
+    'hazard_type',
+    'hazard_information',
+    'region',
     'risk_category',
+    'risk_information',
+    'event_type.apps.EventTypeConfig',
+    'citizen_science',
+    'event',
 ]
 
 MIDDLEWARE = [

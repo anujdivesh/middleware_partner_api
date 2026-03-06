@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Country
 
 from island.models import Island
+from region.models import Region
 
 
 class IslandSerializer(serializers.ModelSerializer):
@@ -9,8 +10,15 @@ class IslandSerializer(serializers.ModelSerializer):
         model = Island
         fields = ("id", "island_name")
 
+
+class RegionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = ("id", "region_name")
+
 class CountrySerializer(serializers.ModelSerializer):
     islands = IslandSerializer(many=True, read_only=True)
+    regions = RegionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Country

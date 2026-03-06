@@ -22,9 +22,17 @@ from django.urls import path
 from . import views
 from rest_framework.authtoken.views import obtain_auth_token
 
+
+admin.site.site_header = "PaRTnR2 API"
+admin.site.site_title = "PaRTnR2 API"
+admin.site.index_title = "PaRTnR2 API"
+
 from country.views import CountryListView
 from django.urls import include
 from cyclone_track.views import CycloneTrackListCreateView
+from risk_information.views import RiskInformationListCreateView
+from hazard_information.views import HazardInformationListView
+from citizen_science.views import CitizenScienceListCreateView
 
 
 
@@ -35,6 +43,9 @@ urlpatterns = [
     path("partner_api/api-token-auth/", obtain_auth_token),
     path("partner_api/v1/country/", CountryListView.as_view()),
     path("partner_api/v1/cyclone_track/", CycloneTrackListCreateView.as_view()),
+    path("partner_api/v1/risk_information/", RiskInformationListCreateView.as_view()),
+    path("partner_api/v1/hazard_information/", HazardInformationListView.as_view()),
+    path("partner_api/v1/citizen_science/", CitizenScienceListCreateView.as_view()),
 ]
 
 if settings.DEBUG:

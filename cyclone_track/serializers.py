@@ -13,5 +13,7 @@ class CycloneTrackSerializer(serializers.ModelSerializer):
             "issued_agency",
             "track_file",
             "geometry",
+            "geometry_computed",
+            "country",
         )
-        read_only_fields = ("id", "geometry")
+        read_only_fields = ("id", "geometry", "geometry_computed")

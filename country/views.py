@@ -8,6 +8,6 @@ class CountryListView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        countries = Country.objects.all().prefetch_related("islands")
+        countries = Country.objects.all().prefetch_related("islands", "regions")
         serializer = CountrySerializer(countries, many=True)
         return Response(serializer.data)

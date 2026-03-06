@@ -9,5 +9,11 @@ class Country(models.Model):
     north_bound_latitude = models.FloatField(null=True, blank=True)
     crs = models.CharField(max_length=255, null=True, blank=True)
 
+    regions = models.ManyToManyField(
+        'region.Region',
+        blank=True,
+        related_name='countries',
+    )
+
     def __str__(self):
         return self.short_name

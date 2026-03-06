@@ -13,8 +13,31 @@ class CycloneTrack(models.Model):
 
     geometry = models.JSONField(null=True, blank=True)
 
+    geometry_computed = models.BooleanField(default=False)
+
+    country = models.ForeignKey(
+        'country.Country',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cyclone_tracks',
+    )
+
     def __str__(self) -> str:
-        return self.cyclone_name or f"CycloneTrack {self.pk}"
+        name = self.cyclone_name or f"CycloneTrack {self.pk}"
+        parts: list[str] = [name]
+
+        if self.issued_time:
+            try:
+                parts.append(self.issued_time.strftime("%Y-%m-%d"))
+            except Exception:
+                pass
+        if self.issued_agency:
+            parts.append(self.issued_agency)
+        if self.country_id and self.country:
+            parts.append(self.country.short_name or self.country.long_name)
+
+        return " | ".join(parts)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -42,9 +65,30 @@ class CycloneTrack(models.Model):
             with self.track_file.open("rb") as file_obj:
                 geojson = cyclone_csv_to_geojson(file_obj)
         except Exception:
+            CycloneTrack.objects.filter(pk=self.pk).update(
+                geometry=None,
+                geometry_computed=False,
+            )
             return
 
-        if not geojson:
+        def is_blank_geometry(value) -> bool:
+            if value is None:
+                return True
+            if isinstance(value, list):
+                return len(value) == 0
+            if isinstance(value, dict):
+                if len(value) == 0:
+                    return True
+                features = value.get("features")
+                if isinstance(features, list) and len(features) == 0:
+                    return True
+            return False
+
+        if is_blank_geometry(geojson):
+            CycloneTrack.objects.filter(pk=self.pk).update(
+                geometry=None,
+                geometry_computed=False,
+            )
             return
 
         # If cyclone_name not provided, infer from CSV metadata.
@@ -57,4 +101,5 @@ class CycloneTrack(models.Model):
         CycloneTrack.objects.filter(pk=self.pk).update(
             geometry=geojson,
             cyclone_name=cyclone_name,
+            geometry_computed=True,
         )
