@@ -21,15 +21,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
+def _getenv_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _getenv_list(name: str, default: list[str]) -> list[str]:
+    value = os.getenv(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-lymg9)8=_5s3yhdbgol#z&6pdaz5&8f30!o2%38ofhc_%gun5)"
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-lymg9)8=_5s3yhdbgol#z&6pdaz5&8f30!o2%38ofhc_%gun5)",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-CSRF_TRUSTED_ORIGINS=['https://*.spc.int',"http://localhost*"]
+DEBUG = _getenv_bool("DJANGO_DEBUG", True)
 
-ALLOWED_HOSTS = ["*"]
-CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = _getenv_list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    ["https://*.spc.int", "http://localhost*"],
+)
+
+ALLOWED_HOSTS = _getenv_list("DJANGO_ALLOWED_HOSTS", ["*"])
+CORS_ALLOW_ALL_ORIGINS = _getenv_bool("CORS_ALLOW_ALL_ORIGINS", True)
 
 
 REST_FRAMEWORK = {
@@ -126,12 +147,23 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'partner-api',
-        'USER': 'postgres',
-        'PASSWORD': 'Oceanportal2017*',
-        #'HOST': 'db',
-        'HOST': 'localhost',
-        'PORT': '5432'
+        'NAME': os.getenv('POSTGRES_DB')
+        or os.getenv('POSTGRESDB_DATABASE')
+        or 'partner-api',
+        'USER': os.getenv('POSTGRES_USER')
+        or os.getenv('POSTGRESDB_USER')
+        or 'postgres',
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD')
+        or os.getenv('POSTGRESDB_ROOT_PASSWORD')
+        or 'Oceanportal2017*',
+        'HOST': os.getenv('POSTGRES_HOST')
+        or os.getenv('POSTGRESDB_HOST')
+        or os.getenv('DJANGO_DB_HOST')
+        or 'localhost',
+        'PORT': os.getenv('POSTGRES_PORT')
+        or os.getenv('POSTGRESDB_DOCKER_PORT')
+        or os.getenv('DJANGO_DB_PORT')
+        or '5432',
     }
 }
 
@@ -169,8 +201,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media files (user uploads)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
