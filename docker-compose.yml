@@ -5,14 +5,16 @@ services:
     build: .
     container_name: middleware_web
     restart: unless-stopped
-    command: python /code/manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "python /code/manage.py collectstatic --noinput &&
+             python /code/manage.py runserver 0.0.0.0:8000"
     env_file: .env
     volumes:
       - .:/code
       - static_volume:/code/staticfiles
       - media_volume:/code/media
     ports:
-      - 8000:8000
+      - 8800:8000
     depends_on:
       - db
   db:
