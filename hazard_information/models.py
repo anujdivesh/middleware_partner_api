@@ -6,8 +6,11 @@ from hazard_type.models import HazardType
 
 
 class HazardInformation(models.Model):
+
+    title = models.CharField(max_length=255, null=True, blank=True)
     protocol = models.CharField(max_length=50)
     url = models.URLField(max_length=2000)
+
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -46,6 +49,8 @@ class HazardInformation(models.Model):
 
     def __str__(self) -> str:
         parts: list[str] = []
+        if self.title:
+            parts.append(self.title)
         if self.country_id and self.country:
             parts.append(self.country.short_name or self.country.long_name)
         if self.event_type_id and self.event_type:

@@ -8,6 +8,7 @@ class HazardInformationSerializer(serializers.ModelSerializer):
         model = HazardInformation
         fields = (
             "id",
+            "title",
             "protocol",
             "url",
             "hazard_type",

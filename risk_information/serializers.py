@@ -8,6 +8,7 @@ class RiskInformationSerializer(serializers.ModelSerializer):
         model = RiskInformation
         fields = (
             "id",
+            "title",
             "risk_category",
             "upload",
             "geometry",

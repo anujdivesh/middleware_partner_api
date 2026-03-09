@@ -10,6 +10,8 @@ from .utils import convert_uploaded_file_to_geometry
 
 
 class RiskInformation(models.Model):
+
+    title = models.CharField(max_length=255, null=True, blank=True)
     risk_category = models.ForeignKey(
         RiskCategory,
         null=True,
@@ -17,6 +19,7 @@ class RiskInformation(models.Model):
         on_delete=models.SET_NULL,
         related_name="risk_information",
     )
+
 
     upload = models.FileField(
         upload_to="risk_information/",
@@ -50,6 +53,9 @@ class RiskInformation(models.Model):
 
     def __str__(self) -> str:
         parts: list[str] = [f"RiskInformation {self.pk}"]
+
+        if self.title:
+            parts.append(self.title)
 
         if self.risk_category_id and self.risk_category:
             parts.append(str(self.risk_category))

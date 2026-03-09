@@ -7,6 +7,7 @@ from .models import HazardInformation
 class HazardInformationAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "title",
         "protocol",
         "url",
         "hazard_type",
@@ -19,6 +20,7 @@ class HazardInformationAdmin(admin.ModelAdmin):
     )
     list_select_related = ("country", "hazard_type", "event_type")
     search_fields = (
+        "title",
         "protocol",
         "url",
         "layer_name",

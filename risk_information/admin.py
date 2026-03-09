@@ -7,6 +7,7 @@ from .models import RiskInformation
 class RiskInformationAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "title",
         "risk_category",
         "upload",
         "geometry_computed",
@@ -16,6 +17,7 @@ class RiskInformationAdmin(admin.ModelAdmin):
     )
     list_select_related = ("risk_category", "country", "event_type")
     search_fields = (
+        "title",
         "risk_category__short_name",
         "risk_category__long_name",
         "event_type__event_name",
