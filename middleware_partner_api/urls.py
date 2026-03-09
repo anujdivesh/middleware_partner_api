@@ -33,6 +33,7 @@ from cyclone_track.views import CycloneTrackListCreateView
 from risk_information.views import RiskInformationListCreateView
 from hazard_information.views import HazardInformationListView
 from citizen_science.views import CitizenScienceListCreateView
+from event.views import EventListCreateView
 
 
 
@@ -46,6 +47,7 @@ urlpatterns = [
     path("partner_api/v1/risk_information/", RiskInformationListCreateView.as_view()),
     path("partner_api/v1/hazard_information/", HazardInformationListView.as_view()),
     path("partner_api/v1/citizen_science/", CitizenScienceListCreateView.as_view()),
+    path("partner_api/v1/event/", EventListCreateView.as_view()),
 ]
 
 if settings.DEBUG:
