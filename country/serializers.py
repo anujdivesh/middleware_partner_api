@@ -17,7 +17,7 @@ class RegionSerializer(serializers.ModelSerializer):
         fields = ("id", "region_name")
 
 class CountrySerializer(serializers.ModelSerializer):
-    islands = IslandSerializer(many=True, read_only=True)
+    islands = IslandSerializer(many=True, read_only=True, required=False)
     regions = RegionSerializer(many=True, read_only=True)
 
     class Meta:

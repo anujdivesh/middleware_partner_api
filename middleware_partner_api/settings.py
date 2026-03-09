@@ -144,6 +144,19 @@ DATABASES = {
     }
 }
 """
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'partner-api',
+        'USER': 'postgres',
+        'PASSWORD': 'Oceanportal2017*',
+        #'HOST': 'db',
+        'HOST': 'localhost',
+        'PORT': '5432'
+    }
+}
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -166,7 +179,7 @@ DATABASES = {
         or '5432',
     }
 }
-
+"""
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 

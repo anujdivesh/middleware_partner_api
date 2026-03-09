@@ -7,8 +7,8 @@ from .models import Country
 class IslandInline(admin.TabularInline):
     model = Island
     extra = 1
-    min_num = 1
-    validate_min = True
+    min_num = 0
+    validate_min = False
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
