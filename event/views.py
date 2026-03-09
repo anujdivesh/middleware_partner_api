@@ -1,4 +1,4 @@
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
@@ -23,4 +23,16 @@ class EventListCreateView(ListCreateAPIView):
     pagination_class = EventPagination
 
     # GET is public, POST requires auth
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+
+class EventRetrieveView(RetrieveAPIView):
+    queryset = (
+        Event.objects.all()
+        .select_related("event_type", "country", "cyclone_track")
+        .prefetch_related("hazards", "risks", "citizen_sciences")
+    )
+    serializer_class = EventSerializer
+
+    # GET is public (same as list)
     permission_classes = (IsAuthenticatedOrReadOnly,)

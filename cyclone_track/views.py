@@ -1,4 +1,4 @@
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
@@ -15,3 +15,11 @@ class CycloneTrackListCreateView(ListCreateAPIView):
 
     # Needed for file upload
     parser_classes = (MultiPartParser, FormParser)
+
+
+class CycloneTrackRetrieveView(RetrieveAPIView):
+    queryset = CycloneTrack.objects.all()
+    serializer_class = CycloneTrackSerializer
+
+    # GET is public (same as list)
+    permission_classes = (IsAuthenticatedOrReadOnly,)

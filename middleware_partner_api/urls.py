@@ -27,13 +27,13 @@ admin.site.site_header = "PaRTnR2 API"
 admin.site.site_title = "PaRTnR2 API"
 admin.site.index_title = "PaRTnR2 API"
 
-from country.views import CountryListView
+from country.views import CountryListView, CountryRetrieveView
 from django.urls import include
-from cyclone_track.views import CycloneTrackListCreateView
-from risk_information.views import RiskInformationListCreateView
-from hazard_information.views import HazardInformationListView
+from cyclone_track.views import CycloneTrackListCreateView, CycloneTrackRetrieveView
+from risk_information.views import RiskInformationListCreateView, RiskInformationRetrieveView
+from hazard_information.views import HazardInformationListView, HazardInformationRetrieveView
 from citizen_science.views import CitizenScienceListCreateView
-from event.views import EventListCreateView
+from event.views import EventListCreateView, EventRetrieveView
 
 
 
@@ -43,11 +43,27 @@ urlpatterns = [
     path("partner_api/admin/", admin.site.urls),
     path("partner_api/api-token-auth/", obtain_auth_token),
     path("partner_api/v1/country/", CountryListView.as_view()),
+    path("partner_api/v1/country/<int:pk>", CountryRetrieveView.as_view()),
+    path("partner_api/v1/country/<int:pk>/", CountryRetrieveView.as_view()),
     path("partner_api/v1/cyclone_track/", CycloneTrackListCreateView.as_view()),
+    path("partner_api/v1/cyclone_track/<int:pk>", CycloneTrackRetrieveView.as_view()),
+    path("partner_api/v1/cyclone_track/<int:pk>/", CycloneTrackRetrieveView.as_view()),
     path("partner_api/v1/risk_information/", RiskInformationListCreateView.as_view()),
+    path("partner_api/v1/risk_information/<int:pk>", RiskInformationRetrieveView.as_view()),
+    path("partner_api/v1/risk_information/<int:pk>/", RiskInformationRetrieveView.as_view()),
     path("partner_api/v1/hazard_information/", HazardInformationListView.as_view()),
+    path(
+        "partner_api/v1/hazard_information/<int:pk>",
+        HazardInformationRetrieveView.as_view(),
+    ),
+    path(
+        "partner_api/v1/hazard_information/<int:pk>/",
+        HazardInformationRetrieveView.as_view(),
+    ),
     path("partner_api/v1/citizen_science/", CitizenScienceListCreateView.as_view()),
     path("partner_api/v1/event/", EventListCreateView.as_view()),
+    path("partner_api/v1/event/<int:pk>", EventRetrieveView.as_view()),
+    path("partner_api/v1/event/<int:pk>/", EventRetrieveView.as_view()),
 ]
 
 if settings.DEBUG:

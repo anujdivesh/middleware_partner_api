@@ -1,4 +1,4 @@
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -23,3 +23,15 @@ class RiskInformationListCreateView(ListCreateAPIView):
 
     # Needed for file upload
     parser_classes = (MultiPartParser, FormParser)
+
+
+class RiskInformationRetrieveView(RetrieveAPIView):
+    queryset = RiskInformation.objects.all().select_related(
+        "risk_category",
+        "country",
+        "event_type",
+    )
+    serializer_class = RiskInformationSerializer
+
+    # GET is public (same as list), POST would be in list/create
+    permission_classes = (IsAuthenticatedOrReadOnly,)
