@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     'event_type.apps.EventTypeConfig',
     'citizen_science',
     'event',
+    'mailer.apps.MailerConfig',
 ]
 
 MIDDLEWARE = [
@@ -223,3 +224,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Optional: override the encryption key used for mail configuration secrets.
+# If not provided, SECRET_KEY is used as the key material.
+MAIL_CONFIG_ENCRYPTION_KEY = os.getenv("MAIL_CONFIG_ENCRYPTION_KEY")
+
+# Optional: default MailConfiguration name to use when calling
+# SPCMailer.send_notification_email_sync(to, subject, body) without specifying a config.
+MAILER_DEFAULT_CONFIGURATION_NAME = os.getenv("MAILER_DEFAULT_CONFIGURATION_NAME")

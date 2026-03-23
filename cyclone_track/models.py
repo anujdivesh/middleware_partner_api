@@ -23,6 +23,15 @@ class CycloneTrack(models.Model):
         related_name='cyclone_tracks',
     )
 
+    notify = models.BooleanField(default=False)
+    mail_configuration = models.ForeignKey(
+        "mailer.MailConfiguration",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="cyclone_tracks",
+    )
+
     def __str__(self) -> str:
         name = self.cyclone_name or f"CycloneTrack {self.pk}"
         parts: list[str] = [name]

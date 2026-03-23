@@ -15,5 +15,19 @@ class CycloneTrackSerializer(serializers.ModelSerializer):
             "geometry",
             "geometry_computed",
             "country",
+            "notify",
+            "mail_configuration",
         )
         read_only_fields = ("id", "geometry", "geometry_computed")
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        notify = attrs.get("notify")
+        mail_configuration = attrs.get("mail_configuration")
+
+        if notify and not mail_configuration:
+            raise serializers.ValidationError(
+                {"mail_configuration": "Required when notify=true."}
+            )
+
+        return attrs

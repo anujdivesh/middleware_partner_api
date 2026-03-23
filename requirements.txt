@@ -24,3 +24,6 @@ rest-framework-simplejwt==0.0.2
 shapely==2.1.2
 six==1.17.0
 sqlparse==0.5.5
+msal==1.33.0
+requests==2.32.3
+cryptography==44.0.2

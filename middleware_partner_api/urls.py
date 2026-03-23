@@ -34,6 +34,13 @@ from risk_information.views import RiskInformationListCreateView, RiskInformatio
 from hazard_information.views import HazardInformationListView, HazardInformationRetrieveView
 from citizen_science.views import CitizenScienceListCreateView
 from event.views import EventListCreateView, EventRetrieveView
+from mailer.views import (
+    MailConfigurationDetailView,
+    MailConfigurationListCreateView,
+    MailConfigurationSendView,
+    MailRecipientDetailView,
+    MailRecipientListCreateView,
+)
 
 
 
@@ -64,6 +71,13 @@ urlpatterns = [
     path("partner_api/v1/event/", EventListCreateView.as_view()),
     path("partner_api/v1/event/<int:pk>", EventRetrieveView.as_view()),
     path("partner_api/v1/event/<int:pk>/", EventRetrieveView.as_view()),
+
+    # Mailer
+    path("partner_api/v1/mailer/recipients/", MailRecipientListCreateView.as_view()),
+    path("partner_api/v1/mailer/recipients/<int:pk>/", MailRecipientDetailView.as_view()),
+    path("partner_api/v1/mailer/configurations/", MailConfigurationListCreateView.as_view()),
+    path("partner_api/v1/mailer/configurations/<int:pk>/", MailConfigurationDetailView.as_view()),
+    path("partner_api/v1/mailer/configurations/<int:pk>/send/", MailConfigurationSendView.as_view()),
 ]
 
 if settings.DEBUG:
