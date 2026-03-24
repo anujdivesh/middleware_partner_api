@@ -14,5 +14,6 @@ class EventSerializer(serializers.ModelSerializer):
             "hazards",
             "risks",
             "citizen_sciences",
+            "model_run",
         )
         read_only_fields = ("id",)

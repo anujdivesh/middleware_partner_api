@@ -13,12 +13,13 @@ class HazardInformationAdmin(admin.ModelAdmin):
         "hazard_type",
         "event_type",
         "country",
+        "model_run",
         "layer_name",
         "min",
         "max",
         "created_at",
     )
-    list_select_related = ("country", "hazard_type", "event_type")
+    list_select_related = ("country", "hazard_type", "event_type", "model_run")
     search_fields = (
         "title",
         "protocol",
@@ -28,4 +29,5 @@ class HazardInformationAdmin(admin.ModelAdmin):
         "event_type__event_name",
         "country__short_name",
         "country__long_name",
+        "model_run__name",
     )

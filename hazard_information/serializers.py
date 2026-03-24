@@ -18,6 +18,7 @@ class HazardInformationSerializer(serializers.ModelSerializer):
             "layer_name",
             "style",
             "country",
+            "model_run",
             "created_at",
         )
         read_only_fields = ("id", "created_at")

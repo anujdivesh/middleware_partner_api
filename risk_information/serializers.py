@@ -16,6 +16,7 @@ class RiskInformationSerializer(serializers.ModelSerializer):
             "created_at",
             "country",
             "event_type",
+            "model_run",
         )
         read_only_fields = (
             "id",

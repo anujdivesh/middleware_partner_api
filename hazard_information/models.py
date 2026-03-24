@@ -44,6 +44,14 @@ class HazardInformation(models.Model):
         related_name="hazard_information",
     )
 
+    model_run = models.ForeignKey(
+        "model.ModelRun",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="hazard_information",
+    )
+
     class Meta:
         db_table = "hazard_information"
 

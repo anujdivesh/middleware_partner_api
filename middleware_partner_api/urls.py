@@ -22,6 +22,8 @@ from django.urls import path
 from . import views
 from rest_framework.authtoken.views import obtain_auth_token
 
+from .admin_site import partner_admin_site
+
 
 admin.site.site_header = "PaRTnR2 API"
 admin.site.site_title = "PaRTnR2 API"
@@ -47,7 +49,7 @@ from mailer.views import (
 urlpatterns = [
     path("", views.root),
     path("partner_api/", views.partner_api_root),
-    path("partner_api/admin/", admin.site.urls),
+    path("partner_api/admin/", partner_admin_site.urls),
     path("partner_api/api-token-auth/", obtain_auth_token),
     path("partner_api/v1/country/", CountryListView.as_view()),
     path("partner_api/v1/country/<int:pk>", CountryRetrieveView.as_view()),

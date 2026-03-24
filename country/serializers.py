@@ -8,7 +8,7 @@ from region.models import Region
 class IslandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Island
-        fields = ("id", "island_name")
+        fields = ("id", "island_name", "region")
 
 
 class RegionSerializer(serializers.ModelSerializer):

@@ -14,8 +14,9 @@ class RiskInformationAdmin(admin.ModelAdmin):
         "created_at",
         "country",
         "event_type",
+        "model_run",
     )
-    list_select_related = ("risk_category", "country", "event_type")
+    list_select_related = ("risk_category", "country", "event_type", "model_run")
     search_fields = (
         "title",
         "risk_category__short_name",
@@ -23,5 +24,7 @@ class RiskInformationAdmin(admin.ModelAdmin):
         "event_type__event_name",
         "country__short_name",
         "country__long_name",
+        "model_run__name",
         "upload",
     )
+

@@ -92,7 +92,6 @@ INSTALLED_APPS = [
     'country',
     'cyclone_track',
     'island',
-    'project',
     'hazard_type',
     'hazard_information',
     'region',
@@ -102,6 +101,7 @@ INSTALLED_APPS = [
     'citizen_science',
     'event',
     'mailer.apps.MailerConfig',
+    'model.apps.ModelAppConfig',
 ]
 
 MIDDLEWARE = [
@@ -145,7 +145,7 @@ DATABASES = {
     }
 }
 """
-"""
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -180,7 +180,7 @@ DATABASES = {
         or '5432',
     }
 }
-
+"""
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 

@@ -11,5 +11,13 @@ class Island(models.Model):
     )
     island_name = models.CharField(max_length=255)
 
+    region = models.ForeignKey(
+        "region.Region",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="islands",
+    )
+
     def __str__(self) -> str:
         return self.island_name

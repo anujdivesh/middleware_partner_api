@@ -48,6 +48,14 @@ class RiskInformation(models.Model):
         related_name='risk_information',
     )
 
+    model_run = models.ForeignKey(
+        "model.ModelRun",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="risk_information",
+    )
+
     class Meta:
         db_table = "risk_information"
 

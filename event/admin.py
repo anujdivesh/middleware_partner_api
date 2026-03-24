@@ -5,8 +5,8 @@ from .models import Event
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("id", "event_type", "country", "cyclone_track")
-    list_select_related = ("event_type", "country", "cyclone_track")
+    list_display = ("id", "event_type", "country", "cyclone_track", "model_run")
+    list_select_related = ("event_type", "country", "cyclone_track", "model_run")
     autocomplete_fields = (
         "event_type",
         "country",
@@ -14,4 +14,5 @@ class EventAdmin(admin.ModelAdmin):
         "hazards",
         "risks",
         "citizen_sciences",
+        "model_run",
     )

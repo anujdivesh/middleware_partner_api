@@ -17,6 +17,7 @@ class Event(models.Model):
     cyclone_track = models.ForeignKey(
         "cyclone_track.CycloneTrack",
         on_delete=models.PROTECT,
+        blank=True,
         related_name="events",
     )
 
@@ -35,6 +36,14 @@ class Event(models.Model):
     citizen_sciences = models.ManyToManyField(
         "citizen_science.CitizenScience",
         blank=True,
+        related_name="events",
+    )
+
+    model_run = models.ForeignKey(
+        "model.ModelRun",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         related_name="events",
     )
 
