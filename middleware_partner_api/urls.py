@@ -36,6 +36,9 @@ from risk_information.views import RiskInformationListCreateView, RiskInformatio
 from hazard_information.views import HazardInformationListView, HazardInformationRetrieveView
 from citizen_science.views import CitizenScienceListCreateView
 from event.views import EventListCreateView, EventRetrieveView
+from model.views import ModelRunListView
+from model.views_update import ModelRunUpdateCompletedView
+from model.views_logs import ModelLogsListCreateView
 from mailer.views import (
     MailConfigurationDetailView,
     MailConfigurationListCreateView,
@@ -73,6 +76,14 @@ urlpatterns = [
     path("partner_api/v1/event/", EventListCreateView.as_view()),
     path("partner_api/v1/event/<int:pk>", EventRetrieveView.as_view()),
     path("partner_api/v1/event/<int:pk>/", EventRetrieveView.as_view()),
+
+    # ModelRun
+    path("partner_api/v1/model_run/", ModelRunListView.as_view()),
+        # PATCH model_run_completed
+        path("partner_api/v1/model_run/<int:pk>/update_completed/", ModelRunUpdateCompletedView.as_view()),
+
+        # ModelLogs
+        path("partner_api/v1/model_run_logs/", ModelLogsListCreateView.as_view()),
 
     # Mailer
     path("partner_api/v1/mailer/recipients/", MailRecipientListCreateView.as_view()),

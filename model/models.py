@@ -72,6 +72,8 @@ class ModelRun(dj_models.Model):
         related_name="runs",
     )
 
+    model_run_completed = dj_models.BooleanField(default=False)
+
     class Meta:
         db_table = "model_run"
         ordering = ("-id",)

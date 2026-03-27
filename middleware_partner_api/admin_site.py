@@ -7,9 +7,9 @@ from django.contrib.admin import AdminSite
 
 
 class PartnerAdminSite(AdminSite):
-    site_header = "PaRTnR2 API"
-    site_title = "PaRTnR2 API"
-    index_title = "PaRTnR2 API"
+    site_header = "Pacific Disaster API"
+    site_title = "Pacific Disaster API"
+    index_title = "Pacific Disaster API"
 
     def get_app_list(self, request, app_label=None):
         app_list = super().get_app_list(request, app_label=app_label)
