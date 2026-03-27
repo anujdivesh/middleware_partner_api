@@ -6,4 +6,3 @@ def root(request):
 
 def partner_api_root(request):
     return JsonResponse({"message": "Welcome to Pacific Disaster api"})
-x
