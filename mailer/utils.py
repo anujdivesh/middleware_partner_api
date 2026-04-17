@@ -75,10 +75,22 @@ class SPCMailer:
         if not to_emails:
             raise ValueError("No recipients specified")
 
+        client_secret = config.client_secret_value
+        if not client_secret:
+            raise ValueError("MailConfiguration.client_secret_value is empty")
+        # If decryption fails, EncryptedTextField returns the raw stored token.
+        # Fail fast with a clear message instead of sending a confusing MSAL error.
+        if isinstance(client_secret, str) and client_secret.startswith("fernet:"):
+            raise RuntimeError(
+                "MailConfiguration.client_secret_value could not be decrypted. "
+                "Ensure MAIL_CONFIG_ENCRYPTION_KEY (or DJANGO_SECRET_KEY) matches the key used when the secret was saved, "
+                "or re-save the secret in the admin UI to re-encrypt it with the current key."
+            )
+
         app = msal.ConfidentialClientApplication(
             config.client_id,
             authority=config.authority_url,
-            client_credential=config.client_secret_value,
+            client_credential=client_secret,
         )
         scopes = ["https://graph.microsoft.com/.default"]
         result = app.acquire_token_for_client(scopes=scopes)

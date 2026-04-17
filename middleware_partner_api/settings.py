@@ -18,6 +18,41 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _load_dotenv_selected(path: Path, *, prefixes: tuple[str, ...] = ("MAIL_",)) -> None:
+    """Best-effort .env loader (no external deps).
+
+    This is intentionally limited to a prefix allow-list so local dev can pick up
+    mailer-related settings (e.g. MAIL_CONFIG_ENCRYPTION_KEY) without accidentally
+    overriding database settings.
+
+    Docker already injects env vars via docker-compose; this only fills in missing
+    values when running Django directly on localhost.
+    """
+
+    try:
+        content = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return
+    except Exception:
+        return
+
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if not key.startswith(prefixes):
+            continue
+        if key in os.environ:
+            continue
+        value = value.strip().strip('"').strip("'")
+        os.environ[key] = value
+
+
+_load_dotenv_selected(BASE_DIR / ".env")
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
