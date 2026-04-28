@@ -8,6 +8,14 @@ class CycloneTrack(models.Model):
     issued_time = models.DateTimeField(null=True, blank=True)
     issued_agency = models.CharField(max_length=255, null=True, blank=True)
 
+    cyclone_track_type = models.ForeignKey(
+        "cyclone_track_type.CycloneTrackType",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="cyclone_tracks",
+    )
+
     # Only mandatory field
     track_file = models.FileField(upload_to="cyclone_tracks/")
 

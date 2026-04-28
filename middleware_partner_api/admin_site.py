@@ -24,6 +24,7 @@ class PartnerAdminSite(AdminSite):
             ("Risks", {"risk_category", "risk_information"}),
             ("Hazards", {"hazard_information", "event_type"}),
             ("Event", {"event", "event_type_v2"}),
+            ("Cyclone", {"cyclone_track", "cyclone_track_type"}),
             ("Country", {"country", "island", "region"}),
         ]
 

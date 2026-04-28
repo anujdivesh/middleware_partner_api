@@ -11,13 +11,14 @@ class CycloneTrackAdmin(admin.ModelAdmin):
         "cyclone_name",
         "issued_time",
         "issued_agency",
+        "cyclone_track_type",
         "track_file",
         "geometry_computed",
         "country",
         "notify",
         "mail_configuration",
     )
-    list_select_related = ("country",)
+    list_select_related = ("country", "cyclone_track_type")
     readonly_fields = ("geometry",)
     search_fields = (
         "cyclone_name",

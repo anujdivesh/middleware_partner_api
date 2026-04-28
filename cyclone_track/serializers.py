@@ -11,6 +11,7 @@ class CycloneTrackSerializer(serializers.ModelSerializer):
             "cyclone_name",
             "issued_time",
             "issued_agency",
+            "cyclone_track_type",
             "track_file",
             "geometry",
             "geometry_computed",
