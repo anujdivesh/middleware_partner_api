@@ -126,6 +126,7 @@ INSTALLED_APPS = [
     'django_filters',
     'country',
     'cyclone_track',
+    'cyclone_track_type.apps.CycloneTrackTypeConfig',
     'island',
     'hazard_type',
     'hazard_information',
