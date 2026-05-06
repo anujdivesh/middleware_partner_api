@@ -5,7 +5,15 @@ from .models import Event
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("id", "event_type", "country", "cyclone_track", "model_run")
+    list_display = (
+        "id",
+        "title",
+        "event_datetime",
+        "event_type",
+        "country",
+        "cyclone_track",
+        "model_run",
+    )
     list_select_related = ("event_type", "country", "cyclone_track", "model_run")
     autocomplete_fields = (
         "event_type",

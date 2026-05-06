@@ -2,6 +2,9 @@ from django.db import models
 
 
 class Event(models.Model):
+    title = models.CharField(max_length=255, blank=True, default="")
+    event_datetime = models.DateTimeField(null=True, blank=True)
+
     event_type = models.ForeignKey(
         "event_type_v2.EventType",
         on_delete=models.PROTECT,

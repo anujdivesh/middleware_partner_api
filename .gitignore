@@ -9,3 +9,7 @@ __pycache__/
 *.log
 .pytest_cache/
 .mypy_cache/
+
+# Local mail test scripts (contain credentials/secrets)
+send_mail.py
+mail_test.py*

@@ -8,6 +8,8 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = (
             "id",
+            "title",
+            "event_datetime",
             "event_type",
             "country",
             "cyclone_track",
