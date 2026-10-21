@@ -1,7 +1,6 @@
 from django.db import models
 
 from country.models import Country
-from event_type.models import EventType
 from hazard_type.models import HazardType
 
 
@@ -16,14 +15,6 @@ class HazardInformation(models.Model):
 
     hazard_type = models.ForeignKey(
         HazardType,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="hazard_information",
-    )
-
-    event_type = models.ForeignKey(
-        EventType,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -61,8 +52,6 @@ class HazardInformation(models.Model):
             parts.append(self.title)
         if self.country_id and self.country:
             parts.append(self.country.short_name or self.country.long_name)
-        if self.event_type_id and self.event_type:
-            parts.append(self.event_type.event_name)
         if self.layer_name:
             parts.append(self.layer_name)
         parts.append(self.protocol)

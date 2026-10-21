@@ -1,6 +1,6 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .models import RiskInformation
@@ -25,13 +25,15 @@ class RiskInformationListCreateView(ListCreateAPIView):
     parser_classes = (MultiPartParser, FormParser)
 
 
-class RiskInformationRetrieveView(RetrieveAPIView):
+class RiskInformationRetrieveView(RetrieveUpdateAPIView):
     queryset = RiskInformation.objects.all().select_related(
         "risk_category",
         "country",
-        "event_type",
     )
     serializer_class = RiskInformationSerializer
 
-    # GET is public (same as list), POST would be in list/create
+    # GET is public (same as list), PUT/PATCH require auth
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    # multipart to replace the upload file; JSON for metadata-only PATCH
+    parser_classes = (MultiPartParser, FormParser, JSONParser)

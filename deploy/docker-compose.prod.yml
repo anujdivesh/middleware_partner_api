@@ -1,0 +1,66 @@
+# Production stack. Run through ./deploy/deploy.sh prod, which passes
+# --env-file deploy/.env and the project name so volumes match the old setup.
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: middleware_web
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn middleware_partner_api.wsgi:application
+               --bind 0.0.0.0:8000
+               --workers $${GUNICORN_WORKERS:-3}
+               --timeout $${GUNICORN_TIMEOUT:-120}
+               --access-logfile -"
+    env_file: .env
+    environment:
+      - DJANGO_ENV=production
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    volumes:
+      - static_volume:/code/staticfiles
+      - media_volume:/code/media
+    ports:
+      - "${DJANGO_LOCAL_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:14
+    container_name: middleware_db
+    restart: unless-stopped
+    # POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD from .env create the DB on
+    # first boot (they are ignored once the postgres_data volume exists).
+    env_file: .env
+    volumes:
+      # Load data with: ./deploy/deploy.sh prod up --restore-latest
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "${POSTGRES_PUBLIC_PORT:-5439}:5432"
+    healthcheck:
+      # -h localhost forces TCP, which is only up after the init restore finishes.
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+
+  nginx:
+    build: ./nginx
+    restart: unless-stopped
+    volumes:
+      - static_volume:/code/staticfiles:ro
+      - media_volume:/code/media:ro
+    ports:
+      - "${NGINX_PORT:-8089}:80"
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

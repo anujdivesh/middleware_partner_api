@@ -21,11 +21,6 @@ class MailConfigurationSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "is_active",
-            "client_id",
-            "authority_url",
-            "client_secret_value",
-            "email_sender",
-            "email_sender_name",
             "subject",
             "body",
             "recipients",
@@ -33,9 +28,16 @@ class MailConfigurationSerializer(serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = ("id", "created_at", "updated_at")
-        extra_kwargs = {
-            "client_secret_value": {"write_only": True},
-        }
+
+
+class SendEmailSerializer(serializers.Serializer):
+    recipients = serializers.ListField(
+        child=serializers.EmailField(),
+        allow_empty=False,
+        max_length=50,
+    )
+    subject = serializers.CharField(max_length=255)
+    message = serializers.CharField(help_text="Plain text or HTML.")
 
 
 class MailConfigurationSendSerializer(serializers.Serializer):

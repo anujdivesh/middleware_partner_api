@@ -11,16 +11,11 @@ class EventAdmin(admin.ModelAdmin):
         "event_datetime",
         "event_type",
         "country",
-        "cyclone_track",
-        "model_run",
     )
-    list_select_related = ("event_type", "country", "cyclone_track", "model_run")
+    list_select_related = ("event_type", "country")
     autocomplete_fields = (
         "event_type",
         "country",
-        "cyclone_track",
-        "hazards",
-        "risks",
         "citizen_sciences",
-        "model_run",
+        "model_runs",
     )

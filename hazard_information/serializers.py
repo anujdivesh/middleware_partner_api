@@ -12,7 +12,6 @@ class HazardInformationSerializer(serializers.ModelSerializer):
             "protocol",
             "url",
             "hazard_type",
-            "event_type",
             "min",
             "max",
             "layer_name",

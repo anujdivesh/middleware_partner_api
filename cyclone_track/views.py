@@ -49,13 +49,12 @@ class CycloneTrackListCreateView(ListCreateAPIView):
                     result = SPCMailer.send_with_config_sync(track.mail_configuration)
                     if not result.ok:
                         logger.error(
-                            "CycloneTrack email send failed; continuing without failing request. track_id=%s status=%s response=%s",
+                            "CycloneTrack email send failed; continuing without failing request. track_id=%s error=%s",
                             track_id,
-                            result.status_code,
-                            (result.response_text or "")[:2000],
+                            result.error[:2000],
                         )
                 except Exception:
-                    # Never let email/Graph issues break cyclone track ingestion.
+                    # Never let email/SMTP issues break cyclone track ingestion.
                     logger.exception(
                         "CycloneTrack email send raised exception; continuing without failing request. track_id=%s",
                         track_id,

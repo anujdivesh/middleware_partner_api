@@ -19,8 +19,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
-from . import views
-from rest_framework.authtoken.views import obtain_auth_token
+from django.views.generic import RedirectView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from . import docs, views
 
 from .admin_site import partner_admin_site
 
@@ -36,7 +37,7 @@ from risk_information.views import RiskInformationListCreateView, RiskInformatio
 from hazard_information.views import HazardInformationListView, HazardInformationRetrieveView
 from citizen_science.views import CitizenScienceListCreateView
 from event.views import EventListCreateView, EventRetrieveView
-from model.views import ModelRunListView
+from model.views import ModelListView, ModelRetrieveView, ModelRunListView, ModelRunRetrieveView
 from model.views_update import ModelRunUpdateCompletedView
 from model.views_logs import ModelLogsListCreateView
 from mailer.views import (
@@ -45,6 +46,7 @@ from mailer.views import (
     MailConfigurationSendView,
     MailRecipientDetailView,
     MailRecipientListCreateView,
+    SendEmailView,
 )
 
 
@@ -53,7 +55,14 @@ urlpatterns = [
     path("", views.root),
     path("partner_api/", views.partner_api_root),
     path("partner_api/admin/", partner_admin_site.urls),
-    path("partner_api/api-token-auth/", obtain_auth_token),
+    path("partner_api/api-token-auth/", views.ObtainExpiringAuthToken.as_view()),
+
+    # API docs
+    path("partner_api/docs/", docs.api_docs, name="api-docs"),
+    path("partner_api/redoc/", RedirectView.as_view(pattern_name="api-docs")),
+    path("partner_api/swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="api-swagger"),
+    path("partner_api/schema/", SpectacularAPIView.as_view(), name="schema"),
+
     path("partner_api/v1/country/", CountryListView.as_view()),
     path("partner_api/v1/country/<int:pk>", CountryRetrieveView.as_view()),
     path("partner_api/v1/country/<int:pk>/", CountryRetrieveView.as_view()),
@@ -77,8 +86,15 @@ urlpatterns = [
     path("partner_api/v1/event/<int:pk>", EventRetrieveView.as_view()),
     path("partner_api/v1/event/<int:pk>/", EventRetrieveView.as_view()),
 
+    # Model
+    path("partner_api/v1/model/", ModelListView.as_view()),
+    path("partner_api/v1/model/<int:pk>", ModelRetrieveView.as_view()),
+    path("partner_api/v1/model/<int:pk>/", ModelRetrieveView.as_view()),
+
     # ModelRun
     path("partner_api/v1/model_run/", ModelRunListView.as_view()),
+    path("partner_api/v1/model_run/<int:pk>", ModelRunRetrieveView.as_view()),
+    path("partner_api/v1/model_run/<int:pk>/", ModelRunRetrieveView.as_view()),
         # PATCH model_run_completed
         path("partner_api/v1/model_run/<int:pk>/update_completed/", ModelRunUpdateCompletedView.as_view()),
 
@@ -86,6 +102,7 @@ urlpatterns = [
         path("partner_api/v1/model_run_logs/", ModelLogsListCreateView.as_view()),
 
     # Mailer
+    path("partner_api/v1/mailer/send/", SendEmailView.as_view()),
     path("partner_api/v1/mailer/recipients/", MailRecipientListCreateView.as_view()),
     path("partner_api/v1/mailer/recipients/<int:pk>/", MailRecipientDetailView.as_view()),
     path("partner_api/v1/mailer/configurations/", MailConfigurationListCreateView.as_view()),

@@ -1,0 +1,12 @@
+# Keep secrets and large dumps out of the image
+**/.env
+**/.env.*
+*.sql
+.git
+.DS_Store
+__pycache__/
+*.py[cod]
+staticfiles/
+send_mail.py
+mail_test.py*
+deploy/backups/

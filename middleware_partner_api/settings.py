@@ -14,19 +14,19 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
+from middleware_partner_api.schema import API_DESCRIPTION
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def _load_dotenv_selected(path: Path, *, prefixes: tuple[str, ...] = ("MAIL_",)) -> None:
+def _load_dotenv(path: Path) -> None:
     """Best-effort .env loader (no external deps).
 
-    This is intentionally limited to a prefix allow-list so local dev can pick up
-    mailer-related settings (e.g. MAIL_CONFIG_ENCRYPTION_KEY) without accidentally
-    overriding database settings.
-
-    Docker already injects env vars via docker-compose; this only fills in missing
-    values when running Django directly on localhost.
+    Values already present in the environment are never overridden, so in Docker
+    the variables injected by docker-compose (e.g. POSTGRES_HOST=db) win.
     """
 
     try:
@@ -42,19 +42,32 @@ def _load_dotenv_selected(path: Path, *, prefixes: tuple[str, ...] = ("MAIL_",))
             continue
         key, value = line.split("=", 1)
         key = key.strip()
-        if not key.startswith(prefixes):
-            continue
         if key in os.environ:
             continue
         value = value.strip().strip('"').strip("'")
         os.environ[key] = value
 
 
-_load_dotenv_selected(BASE_DIR / ".env")
+# deploy/.env is the single config file (template: deploy/.env.example).
+_load_dotenv(BASE_DIR / "deploy" / ".env")
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# DJANGO_ENV selects the environment: "development" (default, localhost with the
+# virtualenv) or "production" (Docker, set by deploy/docker-compose.prod.yml).
+DJANGO_ENV = os.getenv("DJANGO_ENV", "development").strip().lower()
+if DJANGO_ENV in {"prod", "production"}:
+    DJANGO_ENV = "production"
+elif DJANGO_ENV in {"dev", "development", "local"}:
+    DJANGO_ENV = "development"
+else:
+    raise ImproperlyConfigured(
+        f"DJANGO_ENV must be 'development' or 'production', got {DJANGO_ENV!r}"
+    )
+IS_PRODUCTION = DJANGO_ENV == "production"
+
+
+# Deployment checklist:
+# https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 def _getenv_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
@@ -70,36 +83,82 @@ def _getenv_list(name: str, default: list[str]) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _getenv_required(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value or value == "change_me":
+        raise ImproperlyConfigured(f"{name} must be set when DJANGO_ENV=production")
+    return value
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-lymg9)8=_5s3yhdbgol#z&6pdaz5&8f30!o2%38ofhc_%gun5)",
-)
+if IS_PRODUCTION:
+    SECRET_KEY = _getenv_required("DJANGO_SECRET_KEY")
+else:
+    SECRET_KEY = os.getenv(
+        "DJANGO_SECRET_KEY",
+        "django-insecure-lymg9)8=_5s3yhdbgol#z&6pdaz5&8f30!o2%38ofhc_%gun5)",
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = _getenv_bool("DJANGO_DEBUG", True)
+DEBUG = _getenv_bool("DJANGO_DEBUG", not IS_PRODUCTION)
 
-CSRF_TRUSTED_ORIGINS = _getenv_list(
-    "DJANGO_CSRF_TRUSTED_ORIGINS",
-    ["https://*.spc.int", "http://localhost*"],
-)
+if IS_PRODUCTION:
+    ALLOWED_HOSTS = _getenv_list("DJANGO_ALLOWED_HOSTS", [])
+    if not ALLOWED_HOSTS:
+        raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must be set when DJANGO_ENV=production")
+    CSRF_TRUSTED_ORIGINS = _getenv_list("DJANGO_CSRF_TRUSTED_ORIGINS", ["https://*.spc.int"])
+    CORS_ALLOW_ALL_ORIGINS = _getenv_bool("CORS_ALLOW_ALL_ORIGINS", False)
+else:
+    ALLOWED_HOSTS = _getenv_list("DJANGO_ALLOWED_HOSTS", ["*"])
+    CSRF_TRUSTED_ORIGINS = _getenv_list(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        ["http://localhost:8000", "http://127.0.0.1:8000"],
+    )
+    CORS_ALLOW_ALL_ORIGINS = _getenv_bool("CORS_ALLOW_ALL_ORIGINS", True)
 
-ALLOWED_HOSTS = _getenv_list("DJANGO_ALLOWED_HOSTS", ["*"])
-CORS_ALLOW_ALL_ORIGINS = _getenv_bool("CORS_ALLOW_ALL_ORIGINS", True)
+if IS_PRODUCTION:
+    # nginx sits in front of gunicorn and forwards the original scheme/host.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Only enable once the site is served over HTTPS end to end, otherwise
+    # admin login breaks on plain http.
+    SESSION_COOKIE_SECURE = _getenv_bool("DJANGO_SECURE_COOKIES", False)
+    CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
 
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'middleware_partner_api.authentication.ExpiringTokenAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+# API docs: /partner_api/docs/ (simple page, middleware_partner_api/docs.py),
+# /partner_api/swagger/ (interactive), /partner_api/schema/ (OpenAPI file)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Pacific Disaster API',
+    'DESCRIPTION': API_DESCRIPTION,
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': r'/partner_api/v1',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'PREPROCESSING_HOOKS': ['middleware_partner_api.schema.drop_duplicate_and_admin_paths'],
+    'SWAGGER_UI_SETTINGS': {'persistAuthorization': True},
+    # Pin the CDN assets so a new "@latest" release can't break the page.
+    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14',
+    'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/favicon-32x32.png',
+}
+
+# Lifetime of tokens issued by /partner_api/api-token-auth/.
+API_TOKEN_LIFETIME = timedelta(days=int(os.getenv("API_TOKEN_LIFETIME_DAYS", "2")))
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # Access token expiry time
@@ -124,6 +183,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'django_filters',
+    'drf_spectacular',
     'country',
     'cyclone_track',
     'cyclone_track_type.apps.CycloneTrackTypeConfig',
@@ -156,7 +216,7 @@ ROOT_URLCONF = "middleware_partner_api.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "middleware_partner_api" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -173,47 +233,16 @@ WSGI_APPLICATION = "middleware_partner_api.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-"""
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-"""
-"""
+# Values come from deploy/.env (Docker overrides POSTGRES_HOST=db).
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'partner-api',
-        'USER': 'postgres',
-        'PASSWORD': 'Oceanportal2017*',
-        #'HOST': 'db',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
-}
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB')
-        or os.getenv('POSTGRESDB_DATABASE')
-        or 'partner-api',
-        'USER': os.getenv('POSTGRES_USER')
-        or os.getenv('POSTGRESDB_USER')
-        or 'postgres',
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD')
-        or os.getenv('POSTGRESDB_ROOT_PASSWORD')
-        or 'Oceanportal2017*',
-        'HOST': os.getenv('POSTGRES_HOST')
-        or os.getenv('POSTGRESDB_HOST')
-        or os.getenv('DJANGO_DB_HOST')
-        or 'localhost',
-        'PORT': os.getenv('POSTGRES_PORT')
-        or os.getenv('POSTGRESDB_DOCKER_PORT')
-        or os.getenv('DJANGO_DB_PORT')
-        or '5432',
+        'NAME': os.getenv('POSTGRES_DB', 'partner-api'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'CONN_MAX_AGE': 60 if IS_PRODUCTION else 0,
     }
 }
 
@@ -261,7 +290,33 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Optional: override the encryption key used for mail configuration secrets.
+# Send everything to stdout so `docker compose logs` shows request errors even
+# with DEBUG off.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": os.getenv("DJANGO_LOG_LEVEL", "INFO")},
+}
+
+# Email (SendGrid SMTP). Username/password come from deploy/.env; for SendGrid the
+# username is usually the literal string "apikey" and the password an API key.
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("SENDGRID_SMTP_HOST", "smtp.sendgrid.net")
+EMAIL_PORT = int(os.getenv("SENDGRID_SMTP_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("SENDGRID_SMTP_USERNAME", "")
+EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_SMTP_PASSWORD", "")
+EMAIL_USE_TLS = EMAIL_PORT == 587  # STARTTLS
+EMAIL_USE_SSL = EMAIL_PORT == 465
+EMAIL_TIMEOUT = 30
+
+EMAIL_FROM_NAME = os.getenv("SENDGRID_FROM_NAME", "GEM OPM")
+EMAIL_FROM_ADDRESS = os.getenv("SENDGRID_FROM_EMAIL", "opm@spc.int")
+DEFAULT_FROM_EMAIL = f"{EMAIL_FROM_NAME} <{EMAIL_FROM_ADDRESS}>"
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_REPLY_TO = _getenv_list("SENDGRID_REPLY_TO", ["opm@spc.int"])
+
+# Key for the (legacy) encrypted mailer fields kept in old migrations.
 # If not provided, SECRET_KEY is used as the key material.
 MAIL_CONFIG_ENCRYPTION_KEY = os.getenv("MAIL_CONFIG_ENCRYPTION_KEY")
 

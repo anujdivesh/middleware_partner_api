@@ -1,7 +1,5 @@
 from django.db import models
 
-from .fields import EncryptedTextField
-
 
 class MailRecipient(models.Model):
     name = models.CharField(max_length=255, blank=True)
@@ -14,15 +12,10 @@ class MailRecipient(models.Model):
 
 
 class MailConfiguration(models.Model):
+    """Message template + recipients. Transport/sender come from settings.EMAIL_*."""
+
     name = models.CharField(max_length=120, unique=True)
     is_active = models.BooleanField(default=True)
-
-    client_id = models.CharField(max_length=255)
-    authority_url = models.URLField(max_length=500)
-    client_secret_value = EncryptedTextField()
-
-    email_sender = models.EmailField()
-    email_sender_name = models.CharField(max_length=255, blank=True)
 
     subject = models.CharField(max_length=255)
     body = models.TextField(help_text="HTML body")

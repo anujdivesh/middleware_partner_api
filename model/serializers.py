@@ -1,6 +1,10 @@
-
 from rest_framework import serializers
-from .models import ModelRun, ModelLogs
+from .models import Model, ModelRun, ModelLogs
+
+class ModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Model
+        fields = '__all__'
 
 class ModelRunSerializer(serializers.ModelSerializer):
     class Meta:

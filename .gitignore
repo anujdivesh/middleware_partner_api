@@ -13,3 +13,7 @@ __pycache__/
 # Local mail test scripts (contain credentials/secrets)
 send_mail.py
 mail_test.py*
+
+# Database backups (real data) - never commit
+deploy/backups/*
+!deploy/backups/.gitkeep

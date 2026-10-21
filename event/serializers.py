@@ -12,10 +12,7 @@ class EventSerializer(serializers.ModelSerializer):
             "event_datetime",
             "event_type",
             "country",
-            "cyclone_track",
-            "hazards",
-            "risks",
             "citizen_sciences",
-            "model_run",
+            "model_runs",
         )
         read_only_fields = ("id",)

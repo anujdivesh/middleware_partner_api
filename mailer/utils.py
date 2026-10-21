@@ -3,18 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
-import msal
-import requests
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags
 
 from .models import MailConfiguration
 
 
 @dataclass(frozen=True)
-class GraphSendResult:
+class SendResult:
     ok: bool
-    status_code: int
-    response_text: str
+    error: str = ""
 
 
 class SPCMailer:
@@ -47,7 +46,7 @@ class SPCMailer:
             config, subject=subject, body=body, to_emails=to_emails
         )
         if not result.ok:
-            raise RuntimeError(result.response_text)
+            raise RuntimeError(result.error)
         return True
 
     @staticmethod
@@ -57,8 +56,7 @@ class SPCMailer:
         subject: Optional[str] = None,
         body: Optional[str] = None,
         to_emails: Optional[Iterable[str]] = None,
-        timeout_seconds: int = 30,
-    ) -> GraphSendResult:
+    ) -> SendResult:
         if not config.is_active:
             raise ValueError("Mail configuration is inactive")
 
@@ -71,60 +69,36 @@ class SPCMailer:
             to_emails = list(
                 config.recipients.filter(is_active=True).values_list("email", flat=True)
             )
+        return SPCMailer.send_email(to_emails, subject=subject, body=body)
+
+    @staticmethod
+    def send_email(to_emails: Iterable[str], *, subject: str, body: str) -> SendResult:
+        """Send one email over SMTP (settings.EMAIL_*, SendGrid).
+
+        `body` may be HTML or plain text; HTML gets a plain-text alternative.
+        """
         to_emails = [email.strip() for email in to_emails if str(email).strip()]
         if not to_emails:
             raise ValueError("No recipients specified")
 
-        client_secret = config.client_secret_value
-        if not client_secret:
-            raise ValueError("MailConfiguration.client_secret_value is empty")
-        # If decryption fails, EncryptedTextField returns the raw stored token.
-        # Fail fast with a clear message instead of sending a confusing MSAL error.
-        if isinstance(client_secret, str) and client_secret.startswith("fernet:"):
-            raise RuntimeError(
-                "MailConfiguration.client_secret_value could not be decrypted. "
-                "Ensure MAIL_CONFIG_ENCRYPTION_KEY (or DJANGO_SECRET_KEY) matches the key used when the secret was saved, "
-                "or re-save the secret in the admin UI to re-encrypt it with the current key."
+        if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+            return SendResult(
+                ok=False,
+                error="SMTP credentials missing: set SENDGRID_SMTP_USERNAME and SENDGRID_SMTP_PASSWORD",
             )
 
-        app = msal.ConfidentialClientApplication(
-            config.client_id,
-            authority=config.authority_url,
-            client_credential=client_secret,
+        plain_body = strip_tags(body)
+        message = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=to_emails,
+            reply_to=settings.EMAIL_REPLY_TO,
         )
-        scopes = ["https://graph.microsoft.com/.default"]
-        result = app.acquire_token_for_client(scopes=scopes)
-        if "access_token" not in result:
-            raise RuntimeError(
-                f"Could not acquire access token: {result.get('error_description', result)}"
-            )
-        access_token = result["access_token"]
-
-        recip = [{"EmailAddress": {"Address": email}} for email in to_emails]
-
-        email_msg = {
-            "Message": {
-                "Subject": subject,
-                "Body": {"ContentType": "Html", "Content": body},
-                "ToRecipients": recip,
-                "From": {
-                    "EmailAddress": {
-                        "Address": config.email_sender,
-                        "Name": config.email_sender_name or config.email_sender,
-                    }
-                },
-            },
-            "SaveToSentItems": "true",
-        }
-
-        user_id = config.email_sender
-        endpoint = f"https://graph.microsoft.com/v1.0/users/{user_id}/sendMail"
-        headers = {"Authorization": f"Bearer {access_token}"}
-        response = requests.post(
-            endpoint, headers=headers, json=email_msg, timeout=timeout_seconds
-        )
-        if not response.ok:
-            return GraphSendResult(
-                ok=False, status_code=response.status_code, response_text=response.text
-            )
-        return GraphSendResult(ok=True, status_code=response.status_code, response_text=response.text)
+        if plain_body != body:
+            message.attach_alternative(body, "text/html")
+        try:
+            message.send(fail_silently=False)
+        except Exception as exc:
+            return SendResult(ok=False, error=f"{type(exc).__name__}: {exc}")
+        return SendResult(ok=True)

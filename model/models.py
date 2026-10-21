@@ -49,6 +49,7 @@ class Model(dj_models.Model):
 
 class ModelRun(dj_models.Model):
     name = dj_models.CharField(max_length=255, blank=True)
+    model_run_time = dj_models.DateTimeField(null=True, blank=True)
     models = dj_models.ManyToManyField(
         Model,
         related_name="runs",
@@ -56,20 +57,36 @@ class ModelRun(dj_models.Model):
     )
     model_domain = dj_models.ForeignKey(
         ModelDomain,
+        null=True,
+        blank=True,
         on_delete=dj_models.PROTECT,
         related_name="runs",
         db_column="model_domain_id",
     )
     tc_track = dj_models.ForeignKey(
         "cyclone_track.CycloneTrack",
+        null=True,
+        blank=True,
         on_delete=dj_models.PROTECT,
         related_name="model_runs",
         db_column="tc_track_id",
     )
     priority = dj_models.ForeignKey(
         ModelPriority,
+        null=True,
+        blank=True,
         on_delete=dj_models.PROTECT,
         related_name="runs",
+    )
+    hazards = dj_models.ManyToManyField(
+        "hazard_information.HazardInformation",
+        blank=True,
+        related_name="model_runs",
+    )
+    risks = dj_models.ManyToManyField(
+        "risk_information.RiskInformation",
+        blank=True,
+        related_name="model_runs",
     )
 
     model_run_completed = dj_models.BooleanField(default=False)

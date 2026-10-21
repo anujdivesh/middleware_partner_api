@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import OpenApiExample, extend_schema, inline_serializer
+from rest_framework import serializers
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -9,8 +11,18 @@ from .serializers import (
     MailConfigurationSendSerializer,
     MailConfigurationSerializer,
     MailRecipientSerializer,
+    SendEmailSerializer,
 )
 from .utils import SPCMailer
+
+
+SendResultSerializer = inline_serializer(
+    "SendResult",
+    fields={
+        "ok": serializers.BooleanField(),
+        "error": serializers.CharField(required=False),
+    },
+)
 
 
 class MailRecipientListCreateView(ListCreateAPIView):
@@ -40,6 +52,12 @@ class MailConfigurationDetailView(RetrieveUpdateDestroyAPIView):
 class MailConfigurationSendView(APIView):
     permission_classes = (IsAdminUser,)
 
+    @extend_schema(
+        summary="Send a mail configuration's email",
+        description="Uses the configuration's subject/body/recipients unless overridden.",
+        request=MailConfigurationSendSerializer,
+        responses={200: SendResultSerializer, 502: SendResultSerializer},
+    )
     def post(self, request, pk: int):
         config = get_object_or_404(MailConfiguration, pk=pk)
         serializer = MailConfigurationSendSerializer(data=request.data)
@@ -54,13 +72,41 @@ class MailConfigurationSendView(APIView):
         )
 
         if not result.ok:
-            return Response(
-                {
-                    "ok": False,
-                    "status_code": result.status_code,
-                    "response_text": result.response_text,
-                },
-                status=502,
-            )
+            return Response({"ok": False, "error": result.error}, status=502)
 
         return Response({"ok": True})
+
+
+class SendEmailView(APIView):
+    """POST {"recipients": [...], "subject": "...", "message": "..."}"""
+
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        summary="Send an email",
+        description="Sends from GEM OPM <opm@spc.int> via SendGrid. `message` may be plain text or HTML.",
+        request=SendEmailSerializer,
+        responses={200: SendResultSerializer, 502: SendResultSerializer},
+        examples=[
+            OpenApiExample(
+                "Request",
+                value={"recipients": ["someone@spc.int"], "subject": "Test", "message": "Hello"},
+                request_only=True,
+            )
+        ],
+    )
+    def post(self, request):
+        serializer = SendEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        payload = serializer.validated_data
+        result = SPCMailer.send_email(
+            payload["recipients"],
+            subject=payload["subject"],
+            body=payload["message"],
+        )
+
+        if not result.ok:
+            return Response({"ok": False, "error": result.error}, status=502)
+
+        return Response({"ok": True, "recipients": payload["recipients"]})

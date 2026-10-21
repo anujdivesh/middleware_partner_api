@@ -48,7 +48,7 @@ class CycloneTrackAdmin(admin.ModelAdmin):
         if not result.ok:
             self.message_user(
                 request,
-                f"Email send failed (Graph {result.status_code}): {result.response_text}",
+                f"Email send failed: {result.error}",
                 level=messages.ERROR,
             )
             return

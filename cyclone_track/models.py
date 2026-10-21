@@ -56,6 +56,13 @@ class CycloneTrack(models.Model):
 
         return " | ".join(parts)
 
+    def _update_computed(self, **values):
+        """Write computed fields without re-running save(), and keep this
+        instance in sync so API responses show the computed values."""
+        CycloneTrack.objects.filter(pk=self.pk).update(**values)
+        for field, value in values.items():
+            setattr(self, field, value)
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         old_track_name = None
@@ -82,7 +89,7 @@ class CycloneTrack(models.Model):
             with self.track_file.open("rb") as file_obj:
                 geojson = cyclone_csv_to_geojson(file_obj)
         except Exception:
-            CycloneTrack.objects.filter(pk=self.pk).update(
+            self._update_computed(
                 geometry=None,
                 geometry_computed=False,
             )
@@ -102,7 +109,7 @@ class CycloneTrack(models.Model):
             return False
 
         if is_blank_geometry(geojson):
-            CycloneTrack.objects.filter(pk=self.pk).update(
+            self._update_computed(
                 geometry=None,
                 geometry_computed=False,
             )
@@ -115,7 +122,7 @@ class CycloneTrack(models.Model):
         except Exception:
             pass
 
-        CycloneTrack.objects.filter(pk=self.pk).update(
+        self._update_computed(
             geometry=geojson,
             cyclone_name=cyclone_name,
             geometry_computed=True,

@@ -29,10 +29,20 @@ class ModelAdmin(admin.ModelAdmin):
 
 @admin.register(ModelRun)
 class ModelRunAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "model_domain", "tc_track", "priority")
+    list_display = ("id", "name", "model_run_time", "model_domain", "tc_track", "priority")
     search_fields = ("name", "models__name")
     list_select_related = ("model_domain", "tc_track", "priority")
-    filter_horizontal = ("models",)
+    filter_horizontal = ("models", "hazards", "risks")
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        # Option labels include the related country/category; fetch them in one query.
+        if db_field.name == "hazards":
+            kwargs["queryset"] = db_field.related_model.objects.select_related("country")
+        elif db_field.name == "risks":
+            kwargs["queryset"] = db_field.related_model.objects.select_related(
+                "risk_category", "country"
+            )
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 @admin.register(ModelLogs)

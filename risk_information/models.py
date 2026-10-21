@@ -3,7 +3,6 @@ import os
 from django.core.validators import FileExtensionValidator
 from django.db import models
 
-from event_type.models import EventType
 from risk_category.models import RiskCategory
 
 from .utils import convert_uploaded_file_to_geometry
@@ -40,14 +39,6 @@ class RiskInformation(models.Model):
         related_name='risk_information',
     )
 
-    event_type = models.ForeignKey(
-        EventType,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='risk_information',
-    )
-
     model_run = models.ForeignKey(
         "model.ModelRun",
         null=True,
@@ -60,21 +51,25 @@ class RiskInformation(models.Model):
         db_table = "risk_information"
 
     def __str__(self) -> str:
-        parts: list[str] = [f"RiskInformation {self.pk}"]
-
+        parts: list[str] = []
         if self.title:
             parts.append(self.title)
-
         if self.risk_category_id and self.risk_category:
             parts.append(str(self.risk_category))
         if self.country_id and self.country:
             parts.append(self.country.short_name or self.country.long_name)
-        if self.event_type_id and self.event_type:
-            parts.append(self.event_type.event_name)
-        if self.upload:
-            parts.append(os.path.basename(self.upload.name))
+        prefix = " | ".join(parts) or f"Risk information {self.pk}"
 
-        return " | ".join(parts)
+        if self.upload:
+            return f"{prefix}: {os.path.basename(self.upload.name)}"
+        return prefix
+
+    def _update_computed(self, **values):
+        """Write computed fields without re-running save(), and keep this
+        instance in sync so API responses show the computed values."""
+        RiskInformation.objects.filter(pk=self.pk).update(**values)
+        for field, value in values.items():
+            setattr(self, field, value)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -111,7 +106,7 @@ class RiskInformation(models.Model):
                     file_path=file_path,
                 )
         except Exception:
-            RiskInformation.objects.filter(pk=self.pk).update(geometry_computed=False)
+            self._update_computed(geometry_computed=False)
             return
 
         def is_blank_geometry(value) -> bool:
@@ -128,13 +123,13 @@ class RiskInformation(models.Model):
             return False
 
         if is_blank_geometry(geometry):
-            RiskInformation.objects.filter(pk=self.pk).update(
+            self._update_computed(
                 geometry=None,
                 geometry_computed=False,
             )
             return
 
-        RiskInformation.objects.filter(pk=self.pk).update(
+        self._update_computed(
             geometry=geometry,
             geometry_computed=True,
         )
