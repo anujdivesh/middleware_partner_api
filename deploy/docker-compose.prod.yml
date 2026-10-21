@@ -8,14 +8,16 @@ services:
       dockerfile: Dockerfile
     container_name: middleware_web
     restart: unless-stopped
+    # Keep continuation lines at the same indent: with ">" extra-indented lines
+    # keep their newlines, which made sh run each gunicorn flag as a command.
     command: >
       sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
-             gunicorn middleware_partner_api.wsgi:application
-               --bind 0.0.0.0:8000
-               --workers $${GUNICORN_WORKERS:-3}
-               --timeout $${GUNICORN_TIMEOUT:-120}
-               --access-logfile -"
+      python manage.py collectstatic --noinput &&
+      gunicorn middleware_partner_api.wsgi:application
+      --bind 0.0.0.0:8000
+      --workers $${GUNICORN_WORKERS:-3}
+      --timeout $${GUNICORN_TIMEOUT:-120}
+      --access-logfile -"
     env_file: .env
     environment:
       - DJANGO_ENV=production
@@ -56,7 +58,7 @@ services:
       - static_volume:/code/staticfiles:ro
       - media_volume:/code/media:ro
     ports:
-      - "${NGINX_PORT:-8089}:80"
+      - "${NGINX_PORT:-8800}:80"
     depends_on:
       - web
 
