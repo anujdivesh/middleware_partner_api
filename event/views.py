@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -24,6 +25,15 @@ class EventListCreateView(ListCreateAPIView):
 
     # GET is public, POST requires auth
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        country = self.request.query_params.get("country")
+        if country:
+            if not country.isdigit():
+                raise ValidationError({"country": "Must be an integer country id."})
+            queryset = queryset.filter(country_id=int(country))
+        return queryset
 
 
 class EventByCountryListView(ListAPIView):
