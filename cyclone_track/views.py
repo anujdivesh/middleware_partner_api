@@ -1,10 +1,12 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.exceptions import APIException
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.exceptions import APIException, NotFound, ValidationError
 from django.db import transaction
+from django.db.models import F
 import logging
 
+from middleware_partner_api.filters import filter_date_range
 from .models import CycloneTrack
 from .serializers import CycloneTrackSerializer
 from mailer.utils import SPCMailer
@@ -13,8 +15,24 @@ from mailer.utils import SPCMailer
 logger = logging.getLogger(__name__)
 
 
+def filtered_tracks(params):
+    """Tracks newest issued first, filtered by ?cyclone_track_type=, ?country=,
+    ?start_date= and ?end_date= (on issued_time)."""
+    queryset = CycloneTrack.objects.all().order_by(
+        F("issued_time").desc(nulls_last=True), "-id"
+    )
+
+    for param in ("cyclone_track_type", "country"):
+        value = params.get(param)
+        if value:
+            if not value.isdigit():
+                raise ValidationError({param: "Must be an integer id."})
+            queryset = queryset.filter(**{f"{param}_id": int(value)})
+
+    return filter_date_range(queryset, params, "issued_time")
+
+
 class CycloneTrackListCreateView(ListCreateAPIView):
-    queryset = CycloneTrack.objects.all().order_by("-id")
     serializer_class = CycloneTrackSerializer
 
     # GET is public, POST requires auth
@@ -22,6 +40,9 @@ class CycloneTrackListCreateView(ListCreateAPIView):
 
     # Needed for file upload
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_queryset(self):
+        return filtered_tracks(self.request.query_params)
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -70,3 +91,16 @@ class CycloneTrackRetrieveView(RetrieveAPIView):
 
     # GET is public (same as list)
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+
+class CycloneTrackLatestView(RetrieveAPIView):
+    """The most recently issued track; accepts the same filters as the list."""
+
+    serializer_class = CycloneTrackSerializer
+    permission_classes = (AllowAny,)
+
+    def get_object(self):
+        track = filtered_tracks(self.request.query_params).first()
+        if track is None:
+            raise NotFound("No cyclone track found.")
+        return track

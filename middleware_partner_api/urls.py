@@ -32,7 +32,11 @@ admin.site.index_title = "PaRTnR2 API"
 
 from country.views import CountryListView, CountryRetrieveView
 from django.urls import include
-from cyclone_track.views import CycloneTrackListCreateView, CycloneTrackRetrieveView
+from cyclone_track.views import (
+    CycloneTrackLatestView,
+    CycloneTrackListCreateView,
+    CycloneTrackRetrieveView,
+)
 from risk_information.views import RiskInformationListCreateView, RiskInformationRetrieveView
 from hazard_information.views import HazardInformationListView, HazardInformationRetrieveView
 from citizen_science.views import CitizenScienceListCreateView
@@ -69,6 +73,8 @@ urlpatterns = [
     path("partner_api/v1/cyclone_track/", CycloneTrackListCreateView.as_view()),
     path("partner_api/v1/cyclone_track/<int:pk>", CycloneTrackRetrieveView.as_view()),
     path("partner_api/v1/cyclone_track/<int:pk>/", CycloneTrackRetrieveView.as_view()),
+    path("partner_api/v1/cyclone_track/latest", CycloneTrackLatestView.as_view()),
+    path("partner_api/v1/cyclone_track/latest/", CycloneTrackLatestView.as_view()),
     path("partner_api/v1/risk_information/", RiskInformationListCreateView.as_view()),
     path("partner_api/v1/risk_information/<int:pk>", RiskInformationRetrieveView.as_view()),
     path("partner_api/v1/risk_information/<int:pk>/", RiskInformationRetrieveView.as_view()),

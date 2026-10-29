@@ -66,7 +66,10 @@ RESOURCES = [
         "calls": ["list", "get", "create"],
         "multipart": True,
         "sample_file": "track.csv",
-        "note": "Send as form data (multipart) with the CSV in track_file. cyclone_name is "
+        "note": "The list is newest first (by issued_time). Filter it with ?cyclone_track_type=, "
+        "?country=, ?start_date= and ?end_date=. GET /partner_api/v1/cyclone_track/latest/ "
+        "returns the single latest track and takes the same filters. "
+        "Send as form data (multipart) with the CSV in track_file. cyclone_name is "
         "filled from the CSV if you leave it out. Set notify=true together with a "
         "mail_configuration id to email that configuration's recipients after upload.",
     },
@@ -75,9 +78,11 @@ RESOURCES = [
         "title": "Model runs",
         "path": "/partner_api/v1/model_run/",
         "summary": "One run of one or more models, with its hazards and risks.",
-        "access": TOKEN_ALL,
+        "access": PUBLIC_READ,
         "serializer": ModelRunSerializer,
-        "note": "Filter the list with ?model_run_completed=true or false. "
+        "note": "The list is newest first (by model_run_time). Filter it with "
+        "?model_run_completed=true or false, and/or ?start_date= and ?end_date= "
+        "(YYYY-MM-DD or ISO 8601, both inclusive). "
         "To only mark a run complete: PATCH /partner_api/v1/model_run/{id}/update_completed/ "
         'with {"model_run_completed": true}.',
     },
@@ -86,7 +91,7 @@ RESOURCES = [
         "title": "Models",
         "path": "/partner_api/v1/model/",
         "summary": "The models that can be run.",
-        "access": TOKEN_ALL,
+        "access": PUBLIC_READ,
         "serializer": ModelSerializer,
     },
 ]

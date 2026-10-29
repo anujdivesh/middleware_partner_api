@@ -1,0 +1,60 @@
+Base: https://pacific-disaster-api.spc.int/partner_api/v1
+No auth needed for GET.
+
+
+# Events (newest first, 25 per page, ?page=2, ?page_size=200 max)
+
+GET /event/
+GET /event/7/
+GET /event/?start_date=2026-10-01&end_date=2026-10-31
+GET /event/?country=3
+GET /event/country/3/
+GET /event/?country=3&start_date=2026-10-01&end_date=2026-10-31
+
+
+# Model runs (newest first, no paging)
+
+GET /model_run/
+GET /model_run/11/
+GET /model_run/?start_date=2026-10-01&end_date=2026-10-31
+GET /model_run/?model_run_completed=true
+GET /model_run/?model_run_completed=false&start_date=2026-10-01
+
+
+# Models (ordered by id, no paging)
+
+GET /model/
+GET /model/1/
+
+
+# Cyclone tracks (newest issued first, no paging)
+
+GET /cyclone_track/
+GET /cyclone_track/220/
+GET /cyclone_track/?cyclone_track_type=1
+GET /cyclone_track/?start_date=2026-10-01&end_date=2026-10-31
+GET /cyclone_track/?country=3
+GET /cyclone_track/latest/
+GET /cyclone_track/latest/?country=3&cyclone_track_type=1
+
+
+# Hazard information (newest first, no paging)
+
+GET /hazard_information/
+GET /hazard_information/10/
+
+
+# Risk information (newest first, 25 per page, ?page=2, ?page_size=200 max)
+
+GET /risk_information/
+GET /risk_information/130/
+
+
+# Countries
+
+GET /country/
+GET /country/3/
+
+
+Dates: YYYY-MM-DD or 2026-10-19T06:00:00Z (UTC). end_date includes the whole day.
+Add &format=json to get plain JSON in the browser.
