@@ -9,6 +9,7 @@ GET /event/7/
 GET /event/?start_date=2026-10-01&end_date=2026-10-31
 GET /event/?country=3
 GET /event/country/3/
+GET /event/event_type/1/
 GET /event/?country=3&start_date=2026-10-01&end_date=2026-10-31
 
 

@@ -40,7 +40,12 @@ from cyclone_track.views import (
 from risk_information.views import RiskInformationListCreateView, RiskInformationRetrieveView
 from hazard_information.views import HazardInformationListView, HazardInformationRetrieveView
 from citizen_science.views import CitizenScienceListCreateView
-from event.views import EventByCountryListView, EventListCreateView, EventRetrieveView
+from event.views import (
+    EventByCountryListView,
+    EventByTypeListView,
+    EventListCreateView,
+    EventRetrieveView,
+)
 from model.views import ModelListView, ModelRetrieveView, ModelRunListView, ModelRunRetrieveView
 from model.views_update import ModelRunUpdateCompletedView
 from model.views_logs import ModelLogsListCreateView
@@ -93,6 +98,8 @@ urlpatterns = [
     path("partner_api/v1/event/<int:pk>/", EventRetrieveView.as_view()),
     path("partner_api/v1/event/country/<int:country_id>", EventByCountryListView.as_view()),
     path("partner_api/v1/event/country/<int:country_id>/", EventByCountryListView.as_view()),
+    path("partner_api/v1/event/event_type/<int:event_type_id>", EventByTypeListView.as_view()),
+    path("partner_api/v1/event/event_type/<int:event_type_id>/", EventByTypeListView.as_view()),
 
     # Model
     path("partner_api/v1/model/", ModelListView.as_view()),

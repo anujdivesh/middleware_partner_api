@@ -59,6 +59,20 @@ class EventByCountryListView(ListAPIView):
         )
 
 
+class EventByTypeListView(ListAPIView):
+    serializer_class = EventSerializer
+    pagination_class = EventPagination
+    permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        return (
+            Event.objects.filter(event_type_id=self.kwargs["event_type_id"])
+            .select_related("event_type", "country")
+            .prefetch_related("citizen_sciences", "model_runs")
+            .order_by(*EVENT_ORDERING)
+        )
+
+
 class EventRetrieveView(RetrieveUpdateAPIView):
     queryset = (
         Event.objects.all()
