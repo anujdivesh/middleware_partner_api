@@ -46,6 +46,7 @@ from event.views import (
     EventListCreateView,
     EventRetrieveView,
 )
+from event_type.views import EventTypeListView, EventTypeRetrieveView
 from model.views import ModelListView, ModelRetrieveView, ModelRunListView, ModelRunRetrieveView
 from model.views_update import ModelRunUpdateCompletedView
 from model.views_logs import ModelLogsListCreateView
@@ -100,6 +101,9 @@ urlpatterns = [
     path("partner_api/v1/event/country/<int:country_id>/", EventByCountryListView.as_view()),
     path("partner_api/v1/event/event_type/<int:event_type_id>", EventByTypeListView.as_view()),
     path("partner_api/v1/event/event_type/<int:event_type_id>/", EventByTypeListView.as_view()),
+    path("partner_api/v1/event_type/", EventTypeListView.as_view()),
+    path("partner_api/v1/event_type/<int:pk>", EventTypeRetrieveView.as_view()),
+    path("partner_api/v1/event_type/<int:pk>/", EventTypeRetrieveView.as_view()),
 
     # Model
     path("partner_api/v1/model/", ModelListView.as_view()),

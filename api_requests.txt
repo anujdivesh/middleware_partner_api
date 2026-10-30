@@ -51,6 +51,12 @@ GET /risk_information/
 GET /risk_information/130/
 
 
+# Event types
+
+GET /event_type/
+GET /event_type/1/
+
+
 # Countries
 
 GET /country/
